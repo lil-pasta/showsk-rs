@@ -1,12 +1,14 @@
 -- Add migration script here
-CREATE TABLE post(
-	id uuid NOT NULL,
-	PRIMARY KEY (id),
+CREATE TYPE role_enum as ENUM('admin', 'guest');
+
+CREATE TABLE users (
+	user_id uuid NOT NULL,
+	PRIMARY KEY (user_id),
 	email TEXT NOT NULL UNIQUE,
 	username TEXT NOT NULL UNIQUE,
 	password_hash TEXT NOT NULL UNIQUE,
 	about_me TEXT,
-	role ENUM(admin, guest) DEFAULT 'guest',
-)
+	role role_enum DEFAULT 'guest'
+);
 
 
