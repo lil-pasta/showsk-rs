@@ -1,51 +1,53 @@
-use argon2::{self, Config, Variant};
-use unicode_segmentation::UnicodeSegmentation;
+use argon2::{self, Config};
+use derive_more::{Display, Error};
 use ring::rand;
-use ring::error::Unspecified;
 use ring::rand::SecureRandom;
-use std::error;
-use std::fmt;
+use unicode_segmentation::UnicodeSegmentation;
 
 // custom error type for an invalid password
 // this is necessary to handle the multiple possible
 // error return types in the parse function below
-#[derive(Debug)]
-pub struct InvalidPassword;
-
-impl fmt::Display for InvalidPassword {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "invalid password")
-    }
+#[derive(Debug, Display, Error)]
+pub enum PasswordError {
+    #[display(fmt = "Password does not meet requirements")]
+    InvalidPassword,
+    #[display(fmt = "Error generating random numbers")]
+    SystemError,
 }
-
-impl std::error::Error for InvalidPassword {}
 
 #[derive(Debug)]
 pub struct PasswordHash(String);
 
 impl PasswordHash {
-    pub fn parse(pw: String) -> Result<PasswordHash, Box<dyn error::Error>> {
+    pub fn parse(pw: String) -> Result<PasswordHash, PasswordError> {
         let too_long = pw.graphemes(true).count() > 1000;
         let whitespace_or_empty = pw.trim().is_empty();
         let too_short = pw.graphemes(true).count() < 8;
-        let special_chars = [' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~', '"'];
+        let special_chars = [
+            ' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':',
+            ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~', '"',
+        ];
         let contains_special_char = pw.chars().any(|c| special_chars.contains(&c));
-        
+
         // set up hash boy
-        let hash_conf = Config { variant: Variant::Argon2id };
         let rng = rand::SystemRandom::new();
         let mut salt = [0u8; 16];
-        rng.fill(&mut salt).map_err(|e| e.into())?;
+        let conf = Config::default();
+        // you need to fix this error prop issue here. using invalidpassword
+        // for this is absolutely garbo
+        rng.fill(&mut salt)
+            .map_err(|_| PasswordError::SystemError)?;
 
         if too_long || whitespace_or_empty || too_short || !contains_special_char {
-            Ok(PasswordHash::hash_password(&pw.as_bytes(), &salt, hash_conf).unwrap())
+            Err(PasswordError::InvalidPassword)
         } else {
-            InvalidPassword.into()
+            let hash = PasswordHash::hash_password(&pw.as_bytes(), &salt, &conf).unwrap();
+            Ok(Self(hash))
         }
     }
 
-    pub fn hash_password(pw: &[u8], salt: &[u8], config: &Config) -> Result<String, argon2::Error> {
-        argon2::hash_encoded(pw, salt, config)
+    pub fn hash_password(pw: &[u8], salt: &[u8], conf: &Config) -> Result<String, argon2::Error> {
+        argon2::hash_encoded(pw, salt, conf)
     }
 
     pub fn check_hash(enc: &str, pwd: &[u8]) -> Result<bool, argon2::Error> {
@@ -54,7 +56,7 @@ impl PasswordHash {
 }
 
 impl AsRef<str> for PasswordHash {
-    pub fn as_ref(&self) -> &str {
+    fn as_ref(&self) -> &str {
         &self.0
     }
 }
@@ -62,13 +64,16 @@ impl AsRef<str> for PasswordHash {
 #[cfg(test)]
 mod tests {
     use crate::domain::user_password::PasswordHash;
-    use claim::{assert_ok, assert_err};
+    use claim::{assert_err, assert_ok};
 
     #[test]
     fn valid_password_verify_hash() {
         let password: String = String::from("heLl01!3 2");
-        assert_ok!(PasswordHash::parse(password));
-        assert_ok!(PasswordHash::check_hash(&PasswordHash::parse(password), &password.as_bytes());
+        assert_ok!(PasswordHash::parse(password.clone()));
+        assert_ok!(PasswordHash::check_hash(
+            &PasswordHash::parse(password.clone()).unwrap().as_ref(),
+            &password.as_bytes()
+        ));
     }
 
     #[test]
@@ -95,5 +100,3 @@ mod tests {
         assert_err!(PasswordHash::parse(password));
     }
 }
-
-

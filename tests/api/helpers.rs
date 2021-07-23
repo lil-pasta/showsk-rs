@@ -28,5 +28,5 @@ pub async fn spawn_app() -> TestApp {
     TestApp { address: addr }
 }
 
-pub async fn spawn_test_db() -> PgPool {
-    let db_name = uuid::Uuid
+// pub async fn spawn_test_db() -> PgPool {
+//     let db_name = uuid::Uuid

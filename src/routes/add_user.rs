@@ -42,7 +42,7 @@ pub async fn new_user_submission(
     data: web::Data<AppData>,
     form: web::Form<NewUserForm>,
 ) -> Result<HttpResponse, NewUserError> {
-    // dont parse use your domain!
+    // use your domain!
     // let new_user = NewUser::new(form.username, form.email, form.password, form.password_ver)
 }
 

@@ -1,5 +1,5 @@
 // email validation is hard, let someone else do it for you
-use validation::validate_email;
+use validator::validate_email;
 
 #[derive(Debug)]
 pub struct UserEmail(String);
@@ -14,7 +14,7 @@ impl UserEmail {
 }
 
 impl AsRef<str> for UserEmail {
-    pub fn as_ref(&self) -> &str {
+    fn as_ref(&self) -> &str {
         &self.0
     }
 }

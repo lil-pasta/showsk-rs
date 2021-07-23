@@ -59,8 +59,8 @@ pub enum Environment {
 impl Environment {
     pub fn as_string(&self) -> String {
         match self {
-            Local => "local".to_string(),
-            Production => "production".to_string(),
+            Self::Local => "local".to_string(),
+            Self::Production => "production".to_string(),
         }
     }
 }

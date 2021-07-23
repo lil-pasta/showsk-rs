@@ -14,16 +14,15 @@ pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
     let tera = Arc::new(match Tera::new("templates/**/*") {
         Ok(t) => t,
         Err(e) => {
-            println!("error parsing templates exiting program");
+            println!("{} error parsing templates exiting program", e);
             std::process::exit(1);
         }
     });
-
     let server = HttpServer::new(move || {
         App::new()
-            .data(AppData {
+            .app_data(web::Data::new(AppData {
                 template: tera.clone(),
-            })
+            }))
             .wrap(TracingLogger::default())
             .service(index)
             .service(health_check)
