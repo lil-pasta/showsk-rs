@@ -8,7 +8,8 @@ CREATE TABLE users (
 	username TEXT NOT NULL UNIQUE,
 	password_hash TEXT NOT NULL UNIQUE,
 	about_me TEXT,
-	role role_enum DEFAULT 'guest'
+	role role_enum DEFAULT 'guest',
+	joined_on timestamptz NOT NULL
 );
 
 

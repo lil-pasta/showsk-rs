@@ -32,6 +32,12 @@ mod tests {
     }
 
     #[test]
+    fn email_is_valid2() {
+        let email: String = String::from("pasta@pasta.com");
+        assert_ok!(UserEmail::parse(email));
+    }
+
+    #[test]
     fn email_missing_at_sign() {
         let email: String = String::from("thisemail.com");
         assert_err!(UserEmail::parse(email));

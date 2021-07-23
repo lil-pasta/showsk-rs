@@ -32,6 +32,8 @@ unicode-segmentation = "1.8.0"
 rust-argon2 = "0.8.3"
 ring = "0.16.20"
 derive_more = "0.99.16"
+uuid = "0.8.2"
+chrono = "0.4.19"
 
 [dependencies.sqlx]
 version = "0.5.5"

@@ -21,5 +21,5 @@ async fn main() -> std::io::Result<()> {
     let subscriber = subscriber_set_up("waterboy".into(), "info".into());
     init_subscriber(subscriber);
 
-    run(listener)?.await
+    run(listener, db_pool)?.await
 }
