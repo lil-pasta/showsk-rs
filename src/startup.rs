@@ -1,4 +1,4 @@
-use crate::routes::{add_user, health_check, index};
+use crate::routes::{add_user, health_check, index, submit_post, write_post};
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpServer};
 use sqlx::PgPool;
@@ -10,9 +10,14 @@ use tracing_actix_web::TracingLogger;
 pub struct AppData {
     pub template: Arc<Tera>,
     pub db_pool: web::Data<PgPool>,
+    pub upload_path: String,
 }
 
-pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Error> {
+pub fn run(
+    listener: TcpListener,
+    db_pool: PgPool,
+    up_path: String,
+) -> Result<Server, std::io::Error> {
     let tera = Arc::new(match Tera::new("templates/**/*") {
         Ok(t) => t,
         Err(e) => {
@@ -26,11 +31,14 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .app_data(web::Data::new(AppData {
                 template: tera.clone(),
                 db_pool: db.clone(),
+                upload_path: up_path.clone(),
             }))
             .wrap(TracingLogger::default())
             .service(index)
             .service(health_check)
             .service(add_user)
+            .service(submit_post)
+            .service(write_post)
     })
     .listen(listener)?
     .run();

@@ -1,6 +1,7 @@
 application:
   host: 127.0.0.1
   port: 8000
+  upload_path: /home/sh/Dev/rust/showsk-rs/static/uploads
 database:
   require_ssl: false
   database_name: "newsletter"

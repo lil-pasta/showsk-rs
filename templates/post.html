@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<head>
+  <script src="//js.nicedit.com/nicEdit-latest.js" type="text/javascript"></script>
+  <script type="text/javascript">bkLib.onDomLoaded(nicEditors.allTextAreas);</script>
+</head>
+<h1>Hello, time for a new post?</h1>
+<form action='/submit_post' method='post' enctype='multipart/form-data'>
+  <label for="post-editor">Write your post here</label><br>
+  <textarea id="post-editor", name="post-editor"></textarea><br>
+  <label for="image">Choose an image</label><br>
+  <input type="file" id="image" name="image"><br>
+  <input type="submit" value="Post">
+</form>
+{% endblock %}

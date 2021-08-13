@@ -18,6 +18,7 @@ impl Settings {
 pub struct ApplicationSetting {
     pub host: String,
     pub port: u16,
+    pub upload_path: String,
 }
 
 #[derive(serde::Deserialize, Debug)]

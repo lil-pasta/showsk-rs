@@ -10,6 +10,7 @@ async fn main() -> std::io::Result<()> {
     let configuration = get_conf().expect("failed to load configurations");
     let address = configuration.application_address();
     let listener = TcpListener::bind(address)?;
+    let up_path = configuration.application.upload_path;
 
     // set up database
     let db_pool = PgPoolOptions::new()
@@ -21,5 +22,5 @@ async fn main() -> std::io::Result<()> {
     let subscriber = subscriber_set_up("waterboy".into(), "info".into());
     init_subscriber(subscriber);
 
-    run(listener, db_pool)?.await
+    run(listener, db_pool, up_path)?.await
 }
