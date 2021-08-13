@@ -58,7 +58,6 @@ pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost,
     // prep upload dest and create our text payload
     fs::create_dir_all(&u_path).map_err(|_| NewPostError::FileUploadError)?;
     let mut text_body = Vec::new();
-    let mut filename = "".to_string();
     let mut filepath = "".to_string();
     while let Ok(Some(mut field)) = payload.try_next().await {
         let content_type = field.content_disposition().unwrap();
@@ -80,8 +79,9 @@ pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost,
                 Uuid::new_v4(),
                 content_type.get_filename().unwrap()
             );
-            let filepath = format!("{}/{}", u_path, sanitize_filename::sanitize(&filename));
-            let mut f = web::block(move || std::fs::File::create(filepath.clone()))
+            filepath = format!("{}/{}", u_path, sanitize_filename::sanitize(filename));
+            let fpath = filepath.clone();
+            let mut f = web::block(move || std::fs::File::create(fpath))
                 .await
                 .map_err(|_| NewPostError::FileUploadError)?
                 .unwrap();
@@ -95,13 +95,13 @@ pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost,
         }
     }
     let body = text_body.join(" ");
-    let new_post = NewPost::new(body, filename, filepath).map_err(|_| NewPostError::ParseError);
+    let new_post = NewPost::new(body, filepath).map_err(|_| NewPostError::ParseError);
     new_post
 }
 
 // send the post to the db.
 // TODO: add user_id once you've figured out session data
-#[tracing::instrument(name = "performing new user insert", skip(db_pool))]
+#[tracing::instrument(name = "performing new post insert", skip(db_pool, post))]
 pub async fn insert_post(post: &NewPost, db_pool: &PgPool) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"

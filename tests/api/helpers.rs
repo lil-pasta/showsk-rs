@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 pub struct TestApp {
     pub address: String,
+    pub up_path: String,
     pub db_pool: PgPool,
 }
 
@@ -29,13 +30,15 @@ pub async fn spawn_app() -> TestApp {
     let mut conf = get_conf().expect("failed to bind path");
     conf.database.database_name = Uuid::new_v4().to_string();
     let db_pool = spawn_test_db(&conf.database).await;
+    let upp = conf.application.upload_path;
 
     // start a server bound to that random port
-    let server = run(listener, db_pool.clone()).expect("failed to start test server");
+    let server = run(listener, db_pool.clone(), upp.clone()).expect("failed to start test server");
     let _ = tokio::spawn(server);
 
     TestApp {
         address: addr,
+        up_path: upp,
         db_pool: db_pool,
     }
 }

@@ -7,6 +7,7 @@ use std::sync::Arc;
 use tera::Tera;
 use tracing_actix_web::TracingLogger;
 
+#[derive(Debug)]
 pub struct AppData {
     pub template: Arc<Tera>,
     pub db_pool: web::Data<PgPool>,
