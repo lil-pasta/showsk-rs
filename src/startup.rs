@@ -1,4 +1,5 @@
 use crate::routes::{add_user, health_check, index, submit_post, write_post};
+use actix_files::Files;
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpServer};
 use sqlx::PgPool;
@@ -35,6 +36,13 @@ pub fn run(
                 upload_path: up_path.clone(),
             }))
             .wrap(TracingLogger::default())
+            .service(
+                Files::new("/static/css", "static/css/")
+                    .show_files_listing()
+                    .prefer_utf8(true)
+                    .use_last_modified(true),
+            )
+            .service(Files::new("/static/uploads", "static/uploads/"))
             .service(index)
             .service(health_check)
             .service(add_user)

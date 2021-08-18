@@ -1,7 +1,9 @@
 use crate::domain::post::NewPost;
 use crate::startup::AppData;
 use actix_multipart::Multipart;
-use actix_web::{error, http::StatusCode, post, web, HttpResponse, HttpResponseBuilder, Result};
+use actix_web::{
+    error, http, http::StatusCode, post, web, HttpResponse, HttpResponseBuilder, Result,
+};
 use chrono::Utc;
 use derive_more::{Display, Error};
 use futures::{StreamExt, TryStreamExt};
@@ -47,7 +49,10 @@ pub async fn submit_post(
     insert_post(&new_post, &data.db_pool)
         .await
         .map_err(|_| NewPostError::QueryError)?;
-    Ok(HttpResponse::Ok().finish())
+    // all done redirect to index
+    Ok(HttpResponse::Found()
+        .append_header((http::header::LOCATION, "/"))
+        .finish())
 }
 
 // Take the payload from a multipart/form-data post submission and turn it into
@@ -56,7 +61,8 @@ pub async fn submit_post(
 #[tracing::instrument(name = "parsing post submission", skip(payload))]
 pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost, NewPostError> {
     // prep upload dest and create our text payload
-    fs::create_dir_all(&u_path).map_err(|_| NewPostError::FileUploadError)?;
+    let uppath = std::env::current_dir().unwrap().join(u_path);
+    fs::create_dir_all(&uppath.to_str().unwrap()).map_err(|_| NewPostError::FileUploadError)?;
     let mut text_body = Vec::new();
     let mut filepath = "".to_string();
     while let Ok(Some(mut field)) = payload.try_next().await {
@@ -72,25 +78,27 @@ pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost,
                 text_body.push(body_str);
             }
         }
-        // same as above
+        // same as above but for the other field
         else if content_type.get_name().unwrap() == "image" {
-            let filename = format!(
-                "{}-{}",
-                Uuid::new_v4(),
-                content_type.get_filename().unwrap()
-            );
-            filepath = format!("{}/{}", u_path, sanitize_filename::sanitize(filename));
-            let fpath = filepath.clone();
-            let mut f = web::block(move || std::fs::File::create(fpath))
-                .await
-                .map_err(|_| NewPostError::FileUploadError)?
-                .unwrap();
-            while let Some(chunk) = field.next().await {
-                let data = chunk.unwrap();
-                f = web::block(move || f.write_all(&data).map(|_| f))
+            if !content_type.get_filename().unwrap().trim().is_empty() {
+                let filename = format!(
+                    "{}-{}",
+                    Uuid::new_v4(),
+                    sanitize_filename::sanitize(content_type.get_filename().unwrap())
+                );
+                let upload_str = format!("{}/{}", uppath.to_str().unwrap(), filename);
+                filepath = format!("{}/{}", u_path, filename);
+                let mut f = web::block(move || std::fs::File::create(upload_str))
                     .await
                     .map_err(|_| NewPostError::FileUploadError)?
                     .unwrap();
+                while let Some(chunk) = field.next().await {
+                    let data = chunk.unwrap();
+                    f = web::block(move || f.write_all(&data).map(|_| f))
+                        .await
+                        .map_err(|_| NewPostError::FileUploadError)?
+                        .unwrap();
+                }
             }
         }
     }

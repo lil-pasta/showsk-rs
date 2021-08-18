@@ -5,7 +5,13 @@ pub struct Image {
 
 impl Image {
     pub fn new(path: String) -> Result<Image, String> {
-        Ok(Image { path: path })
+        if path.trim().is_empty() {
+            Ok(Image {
+                path: "".to_string(),
+            })
+        } else {
+            Ok(Image { path: path })
+        }
     }
 }
 

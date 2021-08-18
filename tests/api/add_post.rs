@@ -38,13 +38,8 @@ Pellentesque vitae cursus nisi. Mauris a tempor odio. Morbi magna libero, fringi
         .await
         .expect("Failed to fetch saved user");
 
-    println!(
-        "{}\n{}",
-        &test_app.up_path,
-        &saved_user.image.as_ref().unwrap()
-    );
     assert_eq!(saved_user.body, text_body);
-    assert!(saved_user.image.unwrap().contains(&test_app.up_path));
+    assert!(saved_user.image.unwrap().contains(filename));
 }
 
 //#[actix_rt::test]

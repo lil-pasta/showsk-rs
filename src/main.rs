@@ -14,7 +14,7 @@ async fn main() -> std::io::Result<()> {
 
     // set up database
     let db_pool = PgPoolOptions::new()
-        .connect_with(configuration.database.connection_without_db())
+        .connect_with(configuration.database.connection_with_db())
         .await
         .expect("failed to connect to db pool");
 

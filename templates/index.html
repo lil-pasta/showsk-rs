@@ -3,5 +3,9 @@
 {% block content %}
   <h1>Hello</h1>
   <div class="post-container">
+    {% for post in posts %}
+      {% include "_post.html" %}
+    {% endfor %}
   </div>
+  <img src="https://blog.hubspot.com/hs-fs/hubfs/Broken%20link%20icon%20and%20alt%20text%20loaded%20because%20img%20src%20not%20working.png?width=650&name=Broken%20link%20icon%20and%20alt%20text%20loaded%20because%20img%20src%20not%20working.png"/> 
 {% endblock %}

@@ -1,7 +1,7 @@
 <div class="post">
-  <p>{{ post.timestamp }} // <b>{{ post.author.username }}</b>:<p><br>
-  {% if post.image %}
-  <img id="post-image" src={{ post.image }}><br><br>
+  <p>{{ post.timestamp }} // <b>author name</b>:<p><br>
+  {% if post.image != "" %}
+    <img id="post-image" src={{ post.image }} alt="an image"><br><br>
   {% else %}
   {% endif %}
   <div id="post-body">
