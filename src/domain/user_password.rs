@@ -44,7 +44,7 @@ impl PasswordHash {
             if too_long || whitespace_or_empty || too_short || !contains_special_char {
                 Err(PasswordError::InvalidPassword)
             } else {
-                let hash = PasswordHash::hash_password(&pw.as_bytes(), &salt, &conf).unwrap();
+                let hash = PasswordHash::hash_password(pw.as_bytes(), &salt, &conf).unwrap();
                 Ok(Self(hash))
             }
         } else {

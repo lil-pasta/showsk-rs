@@ -103,8 +103,7 @@ pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost,
         }
     }
     let body = text_body.join(" ");
-    let new_post = NewPost::new(body, filepath).map_err(|_| NewPostError::ParseError);
-    new_post
+    NewPost::new(body, filepath).map_err(|_| NewPostError::ParseError)
 }
 
 // send the post to the db.

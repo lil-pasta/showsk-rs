@@ -43,7 +43,6 @@ pub struct NewUserForm {
     fields(
         email=%form.email,
         username=%form.username,
-        password=%form.password,
     )
 )]
 pub async fn add_user(

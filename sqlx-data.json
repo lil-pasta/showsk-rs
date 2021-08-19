@@ -1,0 +1,64 @@
+{
+  "db": "PostgreSQL",
+  "37b452373c1fdaa38a0e5a6154d9e8153536591343d6ed473c6d68aa6cac90b5": {
+    "query": "\n        INSERT INTO post (post_id, body, image, timestmp)\n        VALUES ($1, $2, $3, $4)\n        ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Varchar",
+          "Timestamptz"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "d53ca9437374b6f485a5cb17dc6c35a46afa3ce043264e6262ca203a5a23892f": {
+    "query": "\n        INSERT INTO users (user_id, email, username, password_hash, joined_on)\n        VALUES ($1, $2, $3, $4, $5)\n        ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Text",
+          "Text",
+          "Timestamptz"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "d88312af24cc1f32fc0df278346743cff3a34f3dfa0e4ba7418a4523db3cd27a": {
+    "query": "SELECT body, image, timestmp FROM post",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "body",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 1,
+          "name": "image",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 2,
+          "name": "timestmp",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        true,
+        false
+      ]
+    }
+  }
+}
