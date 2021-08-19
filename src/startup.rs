@@ -38,7 +38,6 @@ pub fn run(
             .wrap(TracingLogger::default())
             .service(
                 Files::new("/static/css", "static/css/")
-                    .show_files_listing()
                     .prefer_utf8(true)
                     .use_last_modified(true),
             )
