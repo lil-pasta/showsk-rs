@@ -9,6 +9,8 @@ DB_PORT="${POSTGRES_PORT:=5432}"
 SKIP_DOCKER=false
 
 # Allow to skip Docker if a dockerized Postgres database is already running
+if [[-z "$SKIP_DOCKER"]]
+then
 docker run \
 	-e POSTGRES_USER=${DB_USER} \
 	-e POSTGRES_PASSWORD=${DB_PASSWORD} \
@@ -16,7 +18,7 @@ docker run \
 	-p "${DB_PORT}":5432 \
 	-d postgres \
 	postgres -N 1000
-
+fi
 export PGPASSWORD="${DB_PASSWORD}"
 
 until psql -h "localhost" -U "${DB_USER}" -p "${DB_PORT}" -d "postgres" -c '\q'; do
