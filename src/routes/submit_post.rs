@@ -79,26 +79,26 @@ pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost,
             }
         }
         // same as above but for the other field
-        else if content_type.get_name().unwrap() == "image" {
-            if !content_type.get_filename().unwrap().trim().is_empty() {
-                let filename = format!(
-                    "{}-{}",
-                    Uuid::new_v4(),
-                    sanitize_filename::sanitize(content_type.get_filename().unwrap())
-                );
-                let upload_str = format!("{}/{}", uppath.to_str().unwrap(), filename);
-                filepath = format!("{}/{}", u_path, filename);
-                let mut f = web::block(move || std::fs::File::create(upload_str))
+        else if content_type.get_name().unwrap() == "image"
+            && !content_type.get_filename().unwrap().trim().is_empty()
+        {
+            let filename = format!(
+                "{}-{}",
+                Uuid::new_v4(),
+                sanitize_filename::sanitize(content_type.get_filename().unwrap())
+            );
+            let upload_str = format!("{}/{}", uppath.to_str().unwrap(), filename);
+            filepath = format!("{}/{}", u_path, filename);
+            let mut f = web::block(move || std::fs::File::create(upload_str))
+                .await
+                .map_err(|_| NewPostError::FileUploadError)?
+                .unwrap();
+            while let Some(chunk) = field.next().await {
+                let data = chunk.unwrap();
+                f = web::block(move || f.write_all(&data).map(|_| f))
                     .await
                     .map_err(|_| NewPostError::FileUploadError)?
                     .unwrap();
-                while let Some(chunk) = field.next().await {
-                    let data = chunk.unwrap();
-                    f = web::block(move || f.write_all(&data).map(|_| f))
-                        .await
-                        .map_err(|_| NewPostError::FileUploadError)?
-                        .unwrap();
-                }
             }
         }
     }

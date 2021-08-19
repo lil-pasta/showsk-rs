@@ -4,13 +4,13 @@ pub struct Image {
 }
 
 impl Image {
-    pub fn new(path: String) -> Result<Image, String> {
-        if path.trim().is_empty() {
+    pub fn new(impath: String) -> Result<Image, String> {
+        if impath.trim().is_empty() {
             Ok(Image {
                 path: "".to_string(),
             })
         } else {
-            Ok(Image { path: path })
+            Ok(Image { path: impath })
         }
     }
 }
