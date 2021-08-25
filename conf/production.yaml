@@ -1,6 +1,7 @@
 application:
   host: 0.0.0.0
   port: 8000
+  upload_path: static/uploads
 database:
-  require_ssl: true
-  database_name: "showsk"
+  require_ssl: false
+  database_name: "newsletter"
