@@ -22,5 +22,12 @@ async fn main() -> std::io::Result<()> {
     let subscriber = subscriber_set_up("waterboy".into(), "info".into());
     init_subscriber(subscriber);
 
+    // TODO: check for static/uploads and create it if it doesnt exist
+    // create static/uploads if it doesnt exist
+    let uppath = std::env::current_dir().unwrap().join(&up_path);
+    println!("{:?}", &uppath);
+    if !std::path::Path::new(&uppath).is_dir() {
+        std::fs::create_dir_all(&uppath.to_str().unwrap())?;
+    }
     run(listener, db_pool, up_path)?.await
 }

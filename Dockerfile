@@ -25,5 +25,6 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/showsk_rs showsk-rs
 COPY conf conf
+COPY static/css static/css
 ENV APP_ENVIRONMENT production
 ENTRYPOINT ["./showsk-rs"]

@@ -68,7 +68,7 @@ pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost,
     while let Ok(Some(mut field)) = payload.try_next().await {
         let content_type = field.content_disposition().unwrap();
         // check disposition for field name
-        // NOTE: this could be made more general/ergonomic
+        // TODO: more dynamic condition checking
         if content_type.get_name().unwrap() == "post-editor" {
             // have to iterate over our text body byte stream
             while let Some(chunk) = field.next().await {
