@@ -1,7 +1,8 @@
-use argon2::{self, Config};
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
 use derive_more::{Display, Error};
-use ring::rand;
-use ring::rand::SecureRandom;
 use unicode_segmentation::UnicodeSegmentation;
 
 // custom error type for an invalid password
@@ -18,10 +19,10 @@ pub enum PasswordError {
 }
 
 #[derive(Debug)]
-pub struct PasswordHash(String);
+pub struct PassHash(String);
 
-impl PasswordHash {
-    pub fn parse(pw: String, pwv: String) -> Result<PasswordHash, PasswordError> {
+impl PassHash {
+    pub fn parse(pw: String, pwv: String) -> Result<PassHash, PasswordError> {
         let too_long = pw.graphemes(true).count() > 1000;
         let whitespace_or_empty = pw.trim().is_empty();
         let too_short = pw.graphemes(true).count() < 8;
@@ -33,18 +34,14 @@ impl PasswordHash {
         let password_match = pw == pwv;
 
         // set up hash boy
-        let rng = rand::SystemRandom::new();
-        let mut salt = [0u8; 16];
-        let conf = Config::default();
+        let salt = SaltString::generate(&mut OsRng);
         // you need to fix this error prop issue here. using invalidpassword
         // for this is absolutely garbo
-        rng.fill(&mut salt)
-            .map_err(|_| PasswordError::SystemError)?;
         if password_match {
             if too_long || whitespace_or_empty || too_short || !contains_special_char {
                 Err(PasswordError::InvalidPassword)
             } else {
-                let hash = PasswordHash::hash_password(pw.as_bytes(), &salt, &conf).unwrap();
+                let hash = PassHash::hash_password(pw.as_bytes(), &salt).unwrap();
                 Ok(Self(hash))
             }
         } else {
@@ -52,16 +49,21 @@ impl PasswordHash {
         }
     }
 
-    pub fn hash_password(pw: &[u8], salt: &[u8], conf: &Config) -> Result<String, argon2::Error> {
-        argon2::hash_encoded(pw, salt, conf)
+    fn hash_password(pw: &[u8], salt: &SaltString) -> Result<String, PasswordError> {
+        let argon2 = Argon2::default();
+        Ok(argon2
+            .hash_password(pw, &salt)
+            .map_err(|_e| PasswordError::SystemError)?
+            .to_string())
     }
 
-    pub fn check_hash(enc: &str, pwd: &[u8]) -> Result<bool, argon2::Error> {
-        argon2::verify_encoded(enc, pwd)
+    pub fn check_hash(enc: &PasswordHash, pwd: &[u8]) -> Result<bool, argon2::Error> {
+        let argon2 = Argon2::default();
+        Ok(argon2.verify_password(pwd, enc).is_ok())
     }
 }
 
-impl AsRef<str> for PasswordHash {
+impl AsRef<str> for PassHash {
     fn as_ref(&self) -> &str {
         &self.0
     }
@@ -69,18 +71,21 @@ impl AsRef<str> for PasswordHash {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::user_password::PasswordHash;
+    use crate::domain::user_password::PassHash;
+    use argon2::password_hash::PasswordHash;
     use claim::{assert_err, assert_ok};
 
     #[test]
     fn valid_password_verify_hash() {
         let password: String = String::from("heLl01!3 2");
         let password_ver: String = String::from("heLl01!3 2");
-        assert_ok!(PasswordHash::parse(password.clone(), password_ver.clone()));
-        assert_ok!(PasswordHash::check_hash(
-            &PasswordHash::parse(password.clone(), password_ver.clone())
-                .unwrap()
-                .as_ref(),
+        assert_ok!(PassHash::parse(password.clone(), password_ver.clone()));
+
+        let hash = PassHash::parse(password.clone(), password_ver.clone())
+            .unwrap()
+            .0;
+        assert_ok!(PassHash::check_hash(
+            &PasswordHash::new(&hash).unwrap(),
             &password.as_bytes()
         ));
     }
@@ -88,31 +93,31 @@ mod tests {
     #[test]
     fn missing_special_char() {
         let password: String = String::from("password");
-        assert_err!(PasswordHash::parse(password.clone(), password));
+        assert_err!(PassHash::parse(password.clone(), password));
     }
 
     #[test]
     fn all_white_space() {
         let password: String = String::from("         ");
-        assert_err!(PasswordHash::parse(password.clone(), password));
+        assert_err!(PassHash::parse(password.clone(), password));
     }
 
     #[test]
     fn empty_string() {
         let password: String = String::from("");
-        assert_err!(PasswordHash::parse(password.clone(), password));
+        assert_err!(PassHash::parse(password.clone(), password));
     }
 
     #[test]
     fn password_too_long() {
         let password: String = String::from("a".repeat(1001));
-        assert_err!(PasswordHash::parse(password.clone(), password));
+        assert_err!(PassHash::parse(password.clone(), password));
     }
 
     #[test]
     fn password_ver_no_match() {
         let password: String = String::from("he223 12!");
         let password_ver: String = String::from("hello");
-        assert_err!(PasswordHash::parse(password, password_ver));
+        assert_err!(PassHash::parse(password, password_ver));
     }
 }

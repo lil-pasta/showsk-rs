@@ -11,5 +11,5 @@ pub use new_user::NewUser;
 pub use post::NewPost;
 pub use text_body::*;
 pub use user_email::UserEmail;
-pub use user_password::PasswordHash;
+pub use user_password::PassHash;
 pub use username::Username;

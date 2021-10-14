@@ -30,8 +30,8 @@ tracing-log = "0.1.2"
 tracing-actix-web = "0.4.0-beta.9"
 validator = "0.14.0"
 unicode-segmentation = "1.8.0"
-rust-argon2 = "0.8.3"
-ring = "0.16.20"
+argon2 = { version = "0.3.1", features = ["password-hash"] }
+rand_core = { version = "0.6", features = ["std"] }
 derive_more = "0.99.16"
 uuid = { version = "0.8.2", features = ["v4"] }
 chrono = "0.4.19"
@@ -40,7 +40,7 @@ sanitize-filename = "0.3.0"
 futures = "0.3.16"
 
 [dependencies.sqlx]
-version = "0.5.5"
+version = "0.5.7"
 default-features = false
 features = [
   "offline",

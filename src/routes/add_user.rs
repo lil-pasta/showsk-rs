@@ -74,7 +74,7 @@ pub async fn insert_user(user: &NewUser, db_pool: &PgPool) -> Result<(), sqlx::E
         Uuid::new_v4(),
         user.email.as_ref(),
         user.username.as_ref(),
-        user.password_hash.as_ref(),
+        user.hashed_password.as_ref(),
         Utc::now(),
     )
     .execute(db_pool)
