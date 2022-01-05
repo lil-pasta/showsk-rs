@@ -10,6 +10,7 @@ impl Image {
                 path: "".to_string(),
             })
         } else {
+            println!("\n\n\n\n************{}**********\n\n\n\n", impath);
             Ok(Image { path: impath })
         }
     }

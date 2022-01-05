@@ -30,6 +30,6 @@ pub async fn index(data: web::Data<AppData>) -> Result<HttpResponse, Error> {
     let mut ctx = Context::new();
     ctx.insert("name", name);
     ctx.insert("posts", &posts);
-    let template = data.template.render("index.html", &ctx).unwrap();
+    let template = data.template.render("index/index.html", &ctx).unwrap();
     Ok(HttpResponse::Ok().body(template))
 }

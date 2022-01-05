@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Hello</h1>
+  <div class="post-container">
+    {% for post in posts %}
+      {% include "index/_post.html" %}
+    {% endfor %}
+  </div>
+{% endblock %}
