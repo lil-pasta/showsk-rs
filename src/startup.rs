@@ -36,12 +36,7 @@ impl Application {
             .connect_with(conf.database.connection_with_db())
             .await?;
 
-        let uppath = std::env::current_dir().unwrap().join(&up_path);
-        if !std::path::Path::new(&uppath).is_dir() {
-            std::fs::create_dir_all(&uppath.to_str().unwrap())?;
-        }
-
-        let server = run(listener, db_pool, String::from(uppath.to_str().unwrap())).await?;
+        let server = run(listener, db_pool, up_path).await?;
         Ok(Self { port, server })
     }
 

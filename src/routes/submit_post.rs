@@ -13,12 +13,15 @@ use std::io::Write;
 use uuid::Uuid;
 
 // custom error handler for the route
+// TODO: switch to a better error writing framework (rather than roll your own)
 #[derive(Debug, Display, Error)]
 pub enum NewPostError {
     #[display(fmt = "An internal error occured. Please try again later")]
     QueryError,
     #[display(fmt = "Error uploading your file")]
     FileUploadError,
+    #[display(fmt = "File upload path error")]
+    FileUploadPathError,
     #[display(fmt = "Error parsing submitted fields")]
     ParseError,
 }
@@ -33,6 +36,7 @@ impl error::ResponseError for NewPostError {
             NewPostError::QueryError => StatusCode::INTERNAL_SERVER_ERROR,
             NewPostError::FileUploadError => StatusCode::INTERNAL_SERVER_ERROR,
             NewPostError::ParseError => StatusCode::BAD_REQUEST,
+            NewPostError::FileUploadPathError => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
@@ -61,7 +65,11 @@ pub async fn submit_post(
 #[tracing::instrument(name = "parsing post submission", skip(payload))]
 pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost, NewPostError> {
     // prep upload dest and create our text payload
-    let uppath = std::env::current_dir().unwrap().join(u_path);
+    let uppath = std::env::current_dir().unwrap().join(&u_path);
+    if !std::path::Path::new(&uppath).is_dir() {
+        std::fs::create_dir_all(&uppath.to_str().unwrap())
+            .map_err(|_| NewPostError::FileUploadPathError)?;
+    }
     fs::create_dir_all(&uppath.to_str().unwrap()).map_err(|_| NewPostError::FileUploadError)?;
     let mut text_body = Vec::new();
     let mut filepath = "".to_string();
@@ -87,8 +95,12 @@ pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost,
                 Uuid::new_v4(),
                 sanitize_filename::sanitize(content_type.get_filename().unwrap())
             );
+
+            // absolute path
             let upload_str = format!("{}/{}", uppath.to_str().unwrap(), filename);
-            filepath = format!("{}/{}", u_path, filename);
+            // relative filepath
+            filepath = format!("../{}/{}", u_path, filename);
+
             let mut f = web::block(move || std::fs::File::create(upload_str))
                 .await
                 .map_err(|_| NewPostError::FileUploadError)?
