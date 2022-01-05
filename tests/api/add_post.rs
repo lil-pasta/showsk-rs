@@ -1,7 +1,7 @@
 use crate::helpers::spawn_app;
 use reqwest;
 
-#[actix_rt::test]
+#[tokio::test]
 async fn valid_post_add_send_200() {
     let text_body: String = r#"
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer in elit libero. Nunc cursus, dui et ornare vehicula, lacus metus ullamcorper lacus, vel scelerisque orci massa eu erat. Aenean pulvinar velit sem, et interdum turpis mattis non. Suspendisse quam eros, commodo ac quam a, condimentum hendrerit ante. Donec laoreet malesuada lacinia. Ut nec massa sed leo vulputate varius. Maecenas eu justo eget turpis lobortis fringilla sed vitae ante. Aliquam mattis quis elit ac efficitur.

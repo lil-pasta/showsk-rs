@@ -1,4 +1,4 @@
-pub mod auth;
+pub mod authorization;
 pub mod configuration;
 pub mod domain;
 pub mod routes;

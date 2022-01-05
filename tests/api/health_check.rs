@@ -1,7 +1,7 @@
 use crate::helpers::spawn_app;
 use reqwest::Client;
 
-#[actix_rt::test]
+#[tokio::test]
 async fn health_check() {
     let test_app = spawn_app().await;
     let client = Client::new();

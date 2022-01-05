@@ -1,7 +1,7 @@
 use crate::helpers::spawn_app;
 use reqwest::Client;
 
-#[actix_rt::test]
+#[tokio::test]
 async fn valid_user_add_send_200() {
     let test_app = spawn_app().await;
     let client = Client::new();
@@ -26,7 +26,7 @@ async fn valid_user_add_send_200() {
     assert_eq!(saved_user.email, "pasta@pasta.com");
 }
 
-#[actix_rt::test]
+#[tokio::test]
 async fn missing_field_user_add_send_400() {
     let test_app = spawn_app().await;
     let client = Client::new();
@@ -61,7 +61,7 @@ async fn missing_field_user_add_send_400() {
     }
 }
 
-#[actix_rt::test]
+#[tokio::test]
 async fn fields_present_invalid_submissions() {
     let test_app = spawn_app().await;
     let client = Client::new();

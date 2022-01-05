@@ -66,7 +66,7 @@ pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost,
     let mut text_body = Vec::new();
     let mut filepath = "".to_string();
     while let Ok(Some(mut field)) = payload.try_next().await {
-        let content_type = field.content_disposition().unwrap();
+        let content_type = field.content_disposition();
         // check disposition for field name
         // TODO: more dynamic condition checking
         if content_type.get_name().unwrap() == "post-editor" {
