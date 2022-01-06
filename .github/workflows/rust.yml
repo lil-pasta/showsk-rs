@@ -62,7 +62,6 @@ jobs:
         run: |
           sudo apt-get install libpq-dev -y
           SKIP_DOCKER=true ./scripts/db_init.sh
-          export DATABASE_URL=postgres://postgres:password@localhost:5432/newsletter
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
@@ -133,7 +132,6 @@ jobs:
         run: |
           sudo apt-get install libpq-dev -y
           SKIP_DOCKER=true ./scripts/db_init.sh
-          export DATABASE_URL=postgres://postgres:password@localhost:5432/newsletter
       - name: Run clippy
         uses: actions-rs/clippy-check@v1
         with:
@@ -189,7 +187,6 @@ jobs:
         run: |
           sudo apt-get install libpq-dev -y
           SKIP_DOCKER=true ./scripts/db_init.sh
-          export DATABASE_URL=postgres://postgres:password@localhost:5432/newsletter
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
         with:
