@@ -1,5 +1,6 @@
 FROM lukemathwalker/cargo-chef:latest-rust-1.53.0 as planner
 WORKDIR /app
+RUN apt update && apt install lld clang -y
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 

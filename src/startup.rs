@@ -1,5 +1,5 @@
 use crate::configuration;
-use crate::routes::{add_user, health_check, index, submit_post, write_post};
+use crate::routes::{add_user, health_check, index, login_form, submit_post, write_post};
 use actix_files::Files;
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpServer};
@@ -82,6 +82,7 @@ async fn run(
             .service(add_user)
             .service(submit_post)
             .service(write_post)
+            .service(login_form)
     })
     .listen(listener)?
     .run();
