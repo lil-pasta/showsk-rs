@@ -1,17 +1,3 @@
-name: Rust
-
-on:
-  # NB: this differs from the book's project!
-  # These settings allow us to run this specific CI pipeline for PRs against
-  # this specific branch (a.k.a. book chapter).
-  push:
-    branches:
-      - root-chapter-10-part1
-  pull_request:
-    types: [ opened, synchronize, reopened ]
-    branches:
-      - root-chapter-10-part1
-
 env:
   CARGO_TERM_COLOR: always
 
@@ -28,17 +14,12 @@ jobs:
           POSTGRES_DB: postgres
         ports:
           - 5432:5432
-      redis:
-        image: redis:6
-        ports:
-          - 6379:6379
     env:
-      SQLX_VERSION: 0.5.7
+      SQLX_VERSION: 0.5.5
       SQLX_FEATURES: postgres
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
       - name: Cache dependencies
         id: cache-dependencies
         uses: actions/cache@v2
@@ -48,7 +29,6 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -62,7 +42,6 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/sqlx
-            ~/.cargo/bin/cargo-sqlx
           key: ${{ runner.os }}-sqlx-${{ env.SQLX_VERSION }}-${{ env.SQLX_FEATURES }}
 
       - name: Install sqlx-cli 
@@ -81,9 +60,6 @@ jobs:
         run: |
           sudo apt-get install libpq-dev -y
           SKIP_DOCKER=true ./scripts/db_init.sh
-      - name: Check sqlx-data.json is up-to-date
-        run: |
-          cargo sqlx prepare --check -- --bin zero2prod
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
@@ -117,7 +93,7 @@ jobs:
         ports:
           - 5432:5432
     env:
-      SQLX_VERSION: 0.5.7
+      SQLX_VERSION: 0.5.5
       SQLX_FEATURES: postgres
     steps:
       - name: Checkout repository
@@ -126,8 +102,8 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
           components: clippy
+          toolchain: stable
           override: true
 
       - name: Cache sqlx-cli
@@ -172,12 +148,8 @@ jobs:
           POSTGRES_DB: postgres
         ports:
           - 5432:5432
-      redis:
-        image: redis:6
-        ports:
-          - 6379:6379
     env:
-      SQLX_VERSION: 0.5.7
+      SQLX_VERSION: 0.5.5
       SQLX_FEATURES: postgres
     steps:
       - name: Checkout repository
