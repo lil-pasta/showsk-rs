@@ -2,11 +2,11 @@
 
 {% block content %}
     <body>
-        <form>
+        <form action="/login" method="post">
             <label id="login-label-uname">username</label><br>
-            <input type="text" id="username-login" name="username-login"><br>
+            <input type="text" id="username" name="username"><br>
             <label id="login-label-pwd">password</label><br>
-            <input type="password" id="pwd-login" name="pwd-login"><br>
+            <input type="password" id="password" name="password"><br>
             <button type="submit">login</button>
         </form>
     </body>
