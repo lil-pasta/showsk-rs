@@ -2,16 +2,16 @@ use crate::domain::new_user::NewUser;
 use crate::startup::AppData;
 use actix_web::{error, http::StatusCode, post, web, HttpResponse, HttpResponseBuilder, Result};
 use chrono::Utc;
-use derive_more::{Display, Error};
 use sqlx::PgPool;
+use thiserror::Error;
 use uuid::Uuid;
 
 // custom error handler for the route
-#[derive(Debug, Display, Error)]
+#[derive(Debug, Error)]
 pub enum NewUserError {
-    #[display(fmt = "An internal error occured. Please try again later")]
+    #[error("An internal error occured. Please try again later")]
     QueryError,
-    #[display(fmt = "Error parsing submitted fields")]
+    #[error("Error parsing submitted fields")]
     ParseError,
 }
 
@@ -64,7 +64,7 @@ pub async fn add_user(
     Ok(HttpResponse::Ok().finish())
 }
 
-#[tracing::instrument(name = "performing new user insert", skip(db_pool))]
+#[tracing::instrument(name = "adding a new user", skip(db_pool))]
 pub async fn insert_user(user: &NewUser, db_pool: &PgPool) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
