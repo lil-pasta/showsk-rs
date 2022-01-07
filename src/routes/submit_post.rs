@@ -5,24 +5,24 @@ use actix_web::{
     error, http, http::StatusCode, post, web, HttpResponse, HttpResponseBuilder, Result,
 };
 use chrono::Utc;
-use derive_more::{Display, Error};
 use futures::{StreamExt, TryStreamExt};
 use sqlx::PgPool;
 use std::fs;
 use std::io::Write;
+use thiserror::Error;
 use uuid::Uuid;
 
 // custom error handler for the route
 // TODO: switch to a better error writing framework (rather than roll your own)
-#[derive(Debug, Display, Error)]
+#[derive(Debug, Error)]
 pub enum NewPostError {
-    #[display(fmt = "An internal error occured. Please try again later")]
+    #[error("An internal error occured. Please try again later")]
     QueryError,
-    #[display(fmt = "Error uploading your file")]
+    #[error("Error uploading your file")]
     FileUploadError,
-    #[display(fmt = "File upload path error")]
+    #[error("File upload path error")]
     FileUploadPathError,
-    #[display(fmt = "Error parsing submitted fields")]
+    #[error("Error parsing submitted fields")]
     ParseError,
 }
 
@@ -62,7 +62,7 @@ pub async fn submit_post(
 // Take the payload from a multipart/form-data post submission and turn it into
 // a valid post
 // TODO: allow for multiple image uploads?
-#[tracing::instrument(name = "parsing post submission", skip(payload))]
+#[tracing::instrument(name = "adding a new post", skip(payload))]
 pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost, NewPostError> {
     // prep upload dest and create our text payload
     let uppath = std::env::current_dir().unwrap().join(&u_path);
@@ -120,7 +120,7 @@ pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost,
 
 // send the post to the db.
 // TODO: add user_id once you've figured out session data
-#[tracing::instrument(name = "performing new post insert", skip(db_pool, post))]
+#[tracing::instrument(name = "adding a new post", skip(db_pool, post))]
 pub async fn insert_post(post: &NewPost, db_pool: &PgPool) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
