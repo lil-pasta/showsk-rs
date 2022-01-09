@@ -33,10 +33,7 @@ pub async fn login_validate(
 ) -> Result<HttpResponse, LoginError> {
     let pool = &data.db_pool;
     match user.validate_credentials(&pool).await {
-        Ok(user_id) => {
-            Ok(HttpResponse::Ok()
-                .body(format!("creds successfully validated for user {}", user_id)))
-        }
+        Ok(user_id) => Ok(HttpResponse::Ok().body(user_id.to_string())),
         Err(e) => {
             let e = match e {
                 AuthorizationError::IncorrectUsername => LoginError::IncorrectLogin(e.into()),

@@ -3,6 +3,7 @@ use reqwest;
 
 #[tokio::test]
 async fn valid_post_add_send_200() {
+    // this is big enough to be a multipart lol...
     let text_body: String = r#"
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer in elit libero. Nunc cursus, dui et ornare vehicula, lacus metus ullamcorper lacus, vel scelerisque orci massa eu erat. Aenean pulvinar velit sem, et interdum turpis mattis non. Suspendisse quam eros, commodo ac quam a, condimentum hendrerit ante. Donec laoreet malesuada lacinia. Ut nec massa sed leo vulputate varius. Maecenas eu justo eget turpis lobortis fringilla sed vitae ante. Aliquam mattis quis elit ac efficitur.
 
@@ -33,13 +34,13 @@ Pellentesque vitae cursus nisi. Mauris a tempor odio. Morbi magna libero, fringi
 
     assert_eq!(200, resp.status().as_u16());
 
-    let saved_user = sqlx::query!("SELECT body, image FROM post")
+    let saved_post = sqlx::query!("SELECT body, image FROM post")
         .fetch_one(&test_app.db_pool)
         .await
         .expect("Failed to fetch saved user");
 
-    assert_eq!(saved_user.body, text_body);
-    assert!(saved_user.image.unwrap().contains(filename));
+    assert_eq!(saved_post.body, text_body);
+    assert!(saved_post.image.unwrap().contains(filename));
 }
 
 //#[actix_rt::test]
