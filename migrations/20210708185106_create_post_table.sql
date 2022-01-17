@@ -4,8 +4,7 @@ CREATE TABLE post(
 	PRIMARY KEY (post_id),
 	body VARCHAR(10000) NOT NULL,
 	image VARCHAR(100),
-	timestmp timestamptz NOT NULL
-	/* add this back in when you figure out session data */
-	/* user_id uuid NOT NULL REFERENCES users(user_id) */
+	timestmp timestamptz NOT NULL,
+	user_id uuid NOT NULL REFERENCES users(user_id)
 );
 	

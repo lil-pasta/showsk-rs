@@ -1,8 +1,9 @@
-use crate::helpers::spawn_app;
+use crate::helpers::{spawn_app, TestUser};
 use reqwest;
 
 #[tokio::test]
 async fn valid_post_add_send_200() {
+    // this is big enough to be a multipart lol...
     let text_body: String = r#"
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer in elit libero. Nunc cursus, dui et ornare vehicula, lacus metus ullamcorper lacus, vel scelerisque orci massa eu erat. Aenean pulvinar velit sem, et interdum turpis mattis non. Suspendisse quam eros, commodo ac quam a, condimentum hendrerit ante. Donec laoreet malesuada lacinia. Ut nec massa sed leo vulputate varius. Maecenas eu justo eget turpis lobortis fringilla sed vitae ante. Aliquam mattis quis elit ac efficitur.
 
@@ -14,9 +15,16 @@ Interdum et malesuada fames ac ante ipsum primis in faucibus. Nullam euismod por
 
 Pellentesque vitae cursus nisi. Mauris a tempor odio. Morbi magna libero, fringilla a odio ut, ullamcorper ultricies ante. Aliquam ornare neque odio. Integer ac volutpat purus, ac accumsan sem. Quisque non suscipit metus, viverra viverra tellus. Nulla odio urna, bibendum at accumsan a, condimentum a tellus."#.to_string();
     let test_app = spawn_app().await;
+    let test_user = TestUser::valid_user();
+    let add_user = test_user.add_user(&test_app.address).await.unwrap();
     let filename = "test.txt";
+    let client = TestUser::test_client();
 
-    let client = reqwest::Client::new();
+    let login_user = test_user
+        .login_user(&test_app.address, &client)
+        .await
+        .unwrap();
+
     let image_part = reqwest::multipart::Part::text("this is some text")
         .file_name(filename.clone())
         .mime_str("text/plain")
@@ -31,15 +39,15 @@ Pellentesque vitae cursus nisi. Mauris a tempor odio. Morbi magna libero, fringi
         .await
         .expect("failed to reach route submit_post");
 
-    assert_eq!(200, resp.status().as_u16());
+    assert_eq!(302, resp.status().as_u16());
 
-    let saved_user = sqlx::query!("SELECT body, image FROM post")
+    let saved_post = sqlx::query!("SELECT body, image FROM post")
         .fetch_one(&test_app.db_pool)
         .await
-        .expect("Failed to fetch saved user");
+        .expect("Failed to fetch saved post");
 
-    assert_eq!(saved_user.body, text_body);
-    assert!(saved_user.image.unwrap().contains(filename));
+    assert_eq!(saved_post.body, text_body);
+    assert!(saved_post.image.unwrap().contains(filename));
 }
 
 //#[actix_rt::test]

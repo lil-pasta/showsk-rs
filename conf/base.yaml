@@ -1,3 +1,6 @@
+application:
+  hmac_secret: "I-needed-to-make-this-key-even-lonbgerthis-is-a-really-tough-secrett-123123-sads"
+  redis_uri: "redis://127.0.0.1:6379"
 database:
   host: "127.0.0.1"
   port: 5432

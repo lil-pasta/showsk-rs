@@ -1,3 +1,4 @@
+use secrecy::Secret;
 use serde_aux::field_attributes::deserialize_number_from_string;
 use sqlx::postgres::{PgConnectOptions, PgSslMode};
 use std::convert::{TryFrom, TryInto};
@@ -19,6 +20,8 @@ pub struct ApplicationSetting {
     pub host: String,
     pub port: u16,
     pub upload_path: String,
+    pub hmac_secret: Secret<String>,
+    pub redis_uri: Secret<String>,
 }
 
 #[derive(serde::Deserialize, Debug)]
