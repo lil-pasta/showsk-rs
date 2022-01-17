@@ -1,3 +1,5 @@
+// TODO:move this into utils.
+
 use crate::domain::new_user::NewUser;
 use crate::startup::AppData;
 use actix_web::{error, http::StatusCode, post, web, HttpResponse, HttpResponseBuilder, Result};

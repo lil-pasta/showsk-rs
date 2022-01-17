@@ -2,6 +2,11 @@
 
 {% block content %}
     <body>
+        {% if error %}
+            {% for e in error %}
+            <p>{{ e }}</p>
+            {% endfor %}
+        {% endif %}
         <form action="/login" method="post">
             <label id="login-label-uname">username</label><br>
             <input type="text" id="username" name="username"><br>

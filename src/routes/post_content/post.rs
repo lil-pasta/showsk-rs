@@ -1,8 +1,13 @@
-use crate::domain::post::NewPost;
-use crate::startup::AppData;
+use crate::{
+    domain::post::NewPost,
+    session_state::TypedSession,
+    startup::AppData,
+    utils::{e500, get_username},
+};
 use actix_multipart::Multipart;
 use actix_web::{
-    error, http, http::StatusCode, post, web, HttpResponse, HttpResponseBuilder, Result,
+    error, http::header::LOCATION, http::StatusCode, post, web, HttpResponse, HttpResponseBuilder,
+    Result,
 };
 use chrono::Utc;
 use futures::{StreamExt, TryStreamExt};
@@ -24,6 +29,8 @@ pub enum NewPostError {
     FileUploadPathError,
     #[error("Error parsing submitted fields")]
     ParseError,
+    #[error("User does not have permission to make post")]
+    PermissionDenied,
 }
 
 impl error::ResponseError for NewPostError {
@@ -37,25 +44,39 @@ impl error::ResponseError for NewPostError {
             NewPostError::FileUploadError => StatusCode::INTERNAL_SERVER_ERROR,
             NewPostError::ParseError => StatusCode::BAD_REQUEST,
             NewPostError::FileUploadPathError => StatusCode::INTERNAL_SERVER_ERROR,
+            NewPostError::PermissionDenied => StatusCode::FORBIDDEN,
         }
     }
 }
 
 #[post("/submit_post")]
-#[tracing::instrument(name = "adding a new post", skip(payload, data))]
+#[tracing::instrument(name = "adding a new post", skip(session, payload, data))]
 pub async fn submit_post(
     payload: Multipart,
     data: web::Data<AppData>,
+    session: TypedSession,
 ) -> Result<HttpResponse, NewPostError> {
+    // protect the route and get username to add to post
+    let userid = if let Some(uid) = session
+        .get_user_id()
+        .map_err(|_| NewPostError::PermissionDenied)?
+    {
+        uid
+    } else {
+        return Ok(HttpResponse::SeeOther()
+            .insert_header((LOCATION, "/login"))
+            .finish());
+    };
+
     // use your domain! now there is only a single access point
     // for the api which should greatly increase app security and reliability
     let new_post = build_post(payload, &data.upload_path).await?;
-    insert_post(&new_post, &data.db_pool)
+    insert_post(userid, &new_post, &data.db_pool)
         .await
         .map_err(|_| NewPostError::QueryError)?;
     // all done redirect to index
     Ok(HttpResponse::Found()
-        .append_header((http::header::LOCATION, "/"))
+        .append_header((LOCATION, "/"))
         .finish())
 }
 
@@ -121,16 +142,17 @@ pub async fn build_post(mut payload: Multipart, u_path: &str) -> Result<NewPost,
 // send the post to the db.
 // TODO: add user_id once you've figured out session data
 #[tracing::instrument(name = "adding a new post", skip(db_pool, post))]
-pub async fn insert_post(post: &NewPost, db_pool: &PgPool) -> Result<(), sqlx::Error> {
+pub async fn insert_post(user: Uuid, post: &NewPost, db_pool: &PgPool) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
-        INSERT INTO post (post_id, body, image, timestmp)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO post (post_id, body, image, timestmp, user_id)
+        VALUES ($1, $2, $3, $4, $5)
         "#,
         Uuid::new_v4(),
         post.body.as_ref(),
         post.image.path,
         Utc::now(),
+        user,
     )
     .execute(db_pool)
     .await

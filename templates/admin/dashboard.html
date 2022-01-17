@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <body>
+        {% if user %}
+            <h1>"Welcome {{ user }}"</h1>
+        {% endif %}
+    </body>
+    {% endblock %}

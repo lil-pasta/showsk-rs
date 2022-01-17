@@ -138,6 +138,14 @@ impl<'a> TestUser<'a> {
         format!("username={}&password={}", username, password)
     }
 
+    pub fn test_client() -> reqwest::Client {
+        Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .cookie_store(true)
+            .build()
+            .unwrap()
+    }
+
     pub async fn add_user(&self, app_address: &String) -> Result<reqwest::Response, anyhow::Error> {
         let body = self.new_user_body();
         let client = Client::new();
@@ -154,9 +162,9 @@ impl<'a> TestUser<'a> {
     pub async fn login_user(
         &self,
         app_address: &String,
+        client: &reqwest::Client,
     ) -> Result<reqwest::Response, anyhow::Error> {
         let body = self.user_login_body();
-        let client = Client::new();
         let resp = client
             .post(&format!("{}/login", &app_address))
             .header("Content-Type", "application/x-www-form-urlencoded")
@@ -164,6 +172,19 @@ impl<'a> TestUser<'a> {
             .send()
             .await
             .expect("failed to reach route add_user");
+        Ok(resp)
+    }
+
+    pub async fn get_admin_dashboard(
+        &self,
+        app_address: &String,
+        client: &reqwest::Client,
+    ) -> Result<reqwest::Response, anyhow::Error> {
+        let resp = client
+            .get(format!("{}/admin/dashboard", &app_address))
+            .send()
+            .await
+            .expect("failed to reach admin dashboard");
         Ok(resp)
     }
 }

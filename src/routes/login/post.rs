@@ -1,6 +1,9 @@
 use crate::authorization::{AuthorizationError, UserCredentials};
+use crate::session_state::TypedSession;
 use crate::startup::AppData;
-use actix_web::{http::StatusCode, post, web, HttpResponse, HttpResponseBuilder};
+use actix_web::error::InternalError;
+use actix_web::{http::header::LOCATION, post, web, HttpResponse};
+use actix_web_flash_messages::FlashMessage;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -11,36 +14,44 @@ pub enum LoginError {
     SystemError(#[from] anyhow::Error),
 }
 
-impl actix_web::error::ResponseError for LoginError {
-    fn error_response(&self) -> HttpResponse {
-        HttpResponseBuilder::new(self.status_code()).body(self.to_string())
-    }
-
-    fn status_code(&self) -> StatusCode {
-        match *self {
-            LoginError::IncorrectLogin(_) => StatusCode::UNAUTHORIZED,
-            LoginError::SystemError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    }
-}
-
 // check login creds and redirect on success/fail
 #[post("/login")]
-#[tracing::instrument(name = "Attempt login", skip(user, data), fields(username=%user.username))]
+#[tracing::instrument(name = "Attempt login", skip(session, user, data), fields(username=%user.username))]
 pub async fn login_validate(
     user: web::Form<UserCredentials>,
     data: web::Data<AppData>,
-) -> Result<HttpResponse, LoginError> {
+    session: TypedSession,
+) -> Result<HttpResponse, InternalError<LoginError>> {
     let pool = &data.db_pool;
+
+    // the successful flow will need to be refactored to create and store session data
+    // in a more elegant/secure way than storing a user_id cookie
     match user.validate_credentials(&pool).await {
-        Ok(user_id) => Ok(HttpResponse::Ok().body(user_id.to_string())),
+        Ok(uid) => {
+            session.renew();
+            session
+                .insert_user(uid)
+                .map_err(|e| login_redirect(LoginError::SystemError(e.into())))?;
+            Ok(HttpResponse::SeeOther()
+                .insert_header((LOCATION, "/admin/dashboard"))
+                .finish())
+        }
         Err(e) => {
             let e = match e {
                 AuthorizationError::IncorrectUsername => LoginError::IncorrectLogin(e.into()),
                 AuthorizationError::IncorrectPassword => LoginError::IncorrectLogin(e.into()),
                 _ => LoginError::SystemError(e.into()),
             };
-            Err(e)
+            Err(login_redirect(e))
         }
     }
+}
+
+// reuse the failure logic in case of error
+fn login_redirect(e: LoginError) -> InternalError<LoginError> {
+    FlashMessage::error(e.to_string()).send();
+    let response = HttpResponse::SeeOther()
+        .insert_header((LOCATION, "/login"))
+        .finish();
+    InternalError::from_response(e, response)
 }

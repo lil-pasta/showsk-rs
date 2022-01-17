@@ -1,10 +1,8 @@
 use crate::helpers::{spawn_app, TestUser, UserField};
-use reqwest::Client;
 
 #[tokio::test]
 async fn valid_user_add_send_200() {
     let test_app = spawn_app().await;
-    let client = Client::new();
     let test_user = TestUser::valid_user();
     let resp = test_user.add_user(&test_app.address).await.unwrap();
 
@@ -22,7 +20,6 @@ async fn valid_user_add_send_200() {
 #[tokio::test]
 async fn missing_field_user_add_send_400() {
     let test_app = spawn_app().await;
-    let client = Client::new();
     let tests = [
         (
             TestUser::missing_field(UserField::Username),
@@ -48,7 +45,6 @@ async fn missing_field_user_add_send_400() {
 #[tokio::test]
 async fn fields_present_invalid_submissions() {
     let test_app = spawn_app().await;
-    let client = Client::new();
     let tests = [
         (
             TestUser::invalid_field(UserField::Username),
